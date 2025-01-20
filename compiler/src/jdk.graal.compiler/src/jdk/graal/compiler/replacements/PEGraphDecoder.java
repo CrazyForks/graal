@@ -48,7 +48,6 @@ import jdk.graal.compiler.api.replacements.Fold;
 import jdk.graal.compiler.bytecode.Bytecode;
 import jdk.graal.compiler.bytecode.BytecodeProvider;
 import jdk.graal.compiler.core.common.PermanentBailoutException;
-import jdk.graal.compiler.core.common.cfg.CFGVerifier;
 import jdk.graal.compiler.core.common.type.ObjectStamp;
 import jdk.graal.compiler.core.common.type.Stamp;
 import jdk.graal.compiler.core.common.type.StampFactory;
@@ -100,6 +99,7 @@ import jdk.graal.compiler.nodes.UnwindNode;
 import jdk.graal.compiler.nodes.ValueNode;
 import jdk.graal.compiler.nodes.WithExceptionNode;
 import jdk.graal.compiler.nodes.calc.FloatingNode;
+import jdk.graal.compiler.nodes.cfg.CFGVerifier;
 import jdk.graal.compiler.nodes.cfg.ControlFlowGraph;
 import jdk.graal.compiler.nodes.extended.AnchoringNode;
 import jdk.graal.compiler.nodes.extended.BytecodeExceptionNode;
@@ -344,7 +344,7 @@ public abstract class PEGraphDecoder extends SimplifyingGraphDecoder {
     }
 
     protected class PENonAppendGraphBuilderContext extends CoreProvidersDelegate implements GraphBuilderContext {
-        protected final PEMethodScope methodScope;
+        public final PEMethodScope methodScope;
         protected final Invoke invoke;
 
         @Override
@@ -999,7 +999,7 @@ public abstract class PEGraphDecoder extends SimplifyingGraphDecoder {
             }
             callTarget = trySimplifyCallTarget(methodScope, invokeData, methodCall);
             ResolvedJavaMethod targetMethod = callTarget.targetMethod();
-            if (forceLink && targetMethod.hasBytecodes() && targetMethod.getCode() == null && !targetMethod.getDeclaringClass().isLinked()) {
+            if (forceLink && targetMethod.getCodeSize() == -1) {
                 targetMethod.getDeclaringClass().link();
             }
             LoopScope inlineLoopScope = trySimplifyInvoke(methodScope, loopScope, invokeData, (MethodCallTargetNode) callTarget);
